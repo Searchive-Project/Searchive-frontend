@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FileText, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
-import { getDocumentsPaginated, type Document, type PaginatedResponse } from "../api"
+import { FileText, Calendar, ChevronLeft, ChevronRight, Search } from "lucide-react"
+import { getDocumentsPaginated, getDocumentsPaginatedAscending, type Document, type PaginatedResponse } from "../api"
 
 export default function DocumentList() {
   const [documents, setDocuments] = useState<Document[]>([])
@@ -12,14 +12,20 @@ export default function DocumentList() {
   const [isLoading, setIsLoading] = useState(false)
   const pageSize = 10
 
+  // 필터 관련 state
+  const [searchName, setSearchName] = useState("")
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc")
+
   useEffect(() => {
     fetchDocuments(currentPage)
   }, [currentPage])
 
-  const fetchDocuments = async (page: number) => {
+  const fetchDocuments = async (page: number, order: "desc" | "asc" = sortOrder) => {
     setIsLoading(true)
     try {
-      const response: PaginatedResponse = await getDocumentsPaginated(page, pageSize)
+      const response: PaginatedResponse = order === "desc"
+        ? await getDocumentsPaginated(page, pageSize)
+        : await getDocumentsPaginatedAscending(page, pageSize)
       setDocuments(response.items)
       setTotalPages(response.total_pages)
       setTotal(response.total)
@@ -30,13 +36,19 @@ export default function DocumentList() {
     }
   }
 
+  const handleSearch = () => {
+    setCurrentPage(1)
+    fetchDocuments(1, sortOrder)
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${year}/${month}/${day} ${hours}:${minutes}`
   }
 
   const formatFileSize = (sizeKb: number) => {
@@ -106,6 +118,45 @@ export default function DocumentList() {
 
   return (
     <div className="w-full">
+      {/* 필터 검색 영역 */}
+      <div className="mb-8 p-5 sm:p-6 bg-gray-50 rounded-xl border border-gray-200">
+        <div className="flex items-center gap-4">
+          {/* 이름 검색 */}
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="문서 이름으로 검색"
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              className="w-full px-6 py-4 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+            />
+          </div>
+
+          {/* 날짜 정렬 */}
+          <div className="flex items-center gap-3">
+            <span className="text-base font-medium text-gray-700 whitespace-nowrap">날짜</span>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "desc" | "asc")}
+              className="px-5 py-4 text-base border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+            >
+              <option value="desc">내림차순</option>
+              <option value="asc">올림차순</option>
+            </select>
+          </div>
+
+          {/* 검색 버튼 */}
+          <button
+            onClick={handleSearch}
+            className="px-8 py-4 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-colors flex items-center gap-2 whitespace-nowrap"
+          >
+            <Search className="w-4 h-4" />
+            검색
+          </button>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-gray-900">업로드된 문서</h2>
         <span className="text-sm text-gray-500">전체 {total}개</span>
@@ -127,7 +178,7 @@ export default function DocumentList() {
                   <div className="flex items-center gap-3 mb-2 text-sm text-gray-500">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
-                      {formatDate(doc.uploaded_at)}
+                      {formatDate(doc.updated_at)}
                     </span>
                     <span>{formatFileSize(doc.file_size_kb)}</span>
                   </div>

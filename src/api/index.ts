@@ -56,3 +56,16 @@ export const getDocumentsPaginated = async (
   });
   return response.data;
 };
+
+export const getDocumentsPaginatedAscending = async (
+  page: number = 1,
+  pageSize: number = 10
+): Promise<PaginatedResponse> => {
+  const response = await apiClient.get('/api/v1/documents/paginated/ascending', {
+    params: {
+      page,
+      page_size: pageSize,
+    },
+  });
+  return response.data;
+};
