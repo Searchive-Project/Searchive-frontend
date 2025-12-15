@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { FileText, Calendar, ChevronLeft, ChevronRight, Search } from "lucide-react"
-import { getDocumentsPaginated, getDocumentsPaginatedAscending, type Document, type PaginatedResponse } from "../api"
+import { documentAPI, type Document, type PaginatedResponse } from "../api"
 
 export default function DocumentList() {
   const [documents, setDocuments] = useState<Document[]>([])
@@ -24,8 +24,8 @@ export default function DocumentList() {
     setIsLoading(true)
     try {
       const response: PaginatedResponse = order === "desc"
-        ? await getDocumentsPaginated(page, pageSize)
-        : await getDocumentsPaginatedAscending(page, pageSize)
+        ? await documentAPI.getPaginated(page, pageSize)
+        : await documentAPI.getPaginatedAscending(page, pageSize)
       setDocuments(response.items)
       setTotalPages(response.total_pages)
       setTotal(response.total)

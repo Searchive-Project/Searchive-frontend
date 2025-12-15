@@ -3,7 +3,7 @@
 import { useState, useRef } from "react"
 import type { DragEvent } from "react"
 import { Upload, X, FileText, CheckCircle } from "lucide-react"
-import { uploadDocument } from "../api"
+import { documentAPI } from "../api"
 import { Button } from "./common/Button"
 
 interface DocumentUploadModalProps {
@@ -72,7 +72,7 @@ export default function DocumentUploadModal({ open, onOpenChange }: DocumentUplo
 
     setIsUploading(true)
     try {
-      const response = await uploadDocument(selectedFile)
+      const response = await documentAPI.upload(selectedFile)
 
       console.log("Upload response:", response) // 디버깅용
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getDocuments } from '../api';
+import { documentAPI } from '../api';
 
 export const useDocuments = () => {
   const [documents, setDocuments] = useState([]);
@@ -10,7 +10,7 @@ export const useDocuments = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getDocuments();
+      const data = await documentAPI.getAll();
       setDocuments(data);
     } catch (err) {
       setError('Failed to fetch documents');
