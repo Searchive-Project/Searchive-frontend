@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FileText, Calendar, ChevronLeft, ChevronRight, Search } from "lucide-react"
+import { FileText, Calendar, ChevronLeft, ChevronRight, Search, Tag as TagIcon } from "lucide-react"
 import { documentAPI, type Document, type PaginatedResponse } from "../api"
+
+type SearchMode = "paginated" | "filename" | "tags"
 
 export default function DocumentList() {
   const [documents, setDocuments] = useState<Document[]>([])
@@ -12,13 +14,17 @@ export default function DocumentList() {
   const [isLoading, setIsLoading] = useState(false)
   const pageSize = 10
 
-  // 필터 관련 state
-  const [searchName, setSearchName] = useState("")
+  // 검색 모드 관련 state
+  const [searchMode, setSearchMode] = useState<SearchMode>("paginated")
+  const [filenameQuery, setFilenameQuery] = useState("")
+  const [tagsQuery, setTagsQuery] = useState("")
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc")
 
   useEffect(() => {
-    fetchDocuments(currentPage)
-  }, [currentPage])
+    if (searchMode === "paginated") {
+      fetchDocuments(currentPage)
+    }
+  }, [currentPage, searchMode])
 
   const fetchDocuments = async (page: number, order: "desc" | "asc" = sortOrder) => {
     setIsLoading(true)
@@ -36,9 +42,51 @@ export default function DocumentList() {
     }
   }
 
-  const handleSearch = () => {
-    setCurrentPage(1)
-    fetchDocuments(1, sortOrder)
+  const handleSearch = async () => {
+    if (searchMode === "paginated") {
+      setCurrentPage(1)
+      fetchDocuments(1, sortOrder)
+      return
+    }
+
+    if (searchMode === "filename" && !filenameQuery.trim()) {
+      alert("검색할 파일명을 입력해주세요.")
+      return
+    }
+
+    if (searchMode === "tags" && !tagsQuery.trim()) {
+      alert("검색할 태그를 입력해주세요.")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      let response
+      if (searchMode === "filename") {
+        response = await documentAPI.searchByFilename(filenameQuery.trim())
+      } else {
+        const tags = tagsQuery.split(",").map(tag => tag.trim()).filter(tag => tag)
+        response = await documentAPI.searchByTags(tags)
+      }
+      setDocuments(response.documents)
+      setTotal(response.total)
+      setTotalPages(1) // 검색 결과는 페이지네이션 없음
+    } catch (error) {
+      console.error("Search failed:", error)
+      alert("검색에 실패했습니다. 다시 시도해주세요.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSearchModeChange = (mode: SearchMode) => {
+    setSearchMode(mode)
+    setFilenameQuery("")
+    setTagsQuery("")
+    if (mode === "paginated") {
+      setCurrentPage(1)
+      fetchDocuments(1, sortOrder)
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -118,42 +166,114 @@ export default function DocumentList() {
 
   return (
     <div className="w-full">
+      {/* 검색 모드 선택 */}
+      <div className="mb-4 flex gap-4">
+        <button
+          onClick={() => handleSearchModeChange("paginated")}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            searchMode === "paginated"
+              ? "bg-blue-400 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            전체 목록
+          </div>
+        </button>
+        <button
+          onClick={() => handleSearchModeChange("filename")}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            searchMode === "filename"
+              ? "bg-blue-400 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            파일명 검색
+          </div>
+        </button>
+        <button
+          onClick={() => handleSearchModeChange("tags")}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            searchMode === "tags"
+              ? "bg-blue-400 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <TagIcon className="w-4 h-4" />
+            태그 검색
+          </div>
+        </button>
+      </div>
+
       {/* 필터 검색 영역 */}
       <div className="mb-8 p-5 sm:p-6 bg-gray-50 rounded-xl border border-gray-200">
         <div className="flex items-center gap-4">
-          {/* 이름 검색 */}
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="문서 이름으로 검색"
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full px-6 py-4 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-            />
-          </div>
+          {/* 검색 입력 영역 */}
+          {searchMode === "paginated" && (
+            <>
+              <div className="flex-1">
+                <span className="text-base font-medium text-gray-700">전체 문서 목록</span>
+              </div>
+              {/* 날짜 정렬 */}
+              <div className="flex items-center gap-3">
+                <span className="text-base font-medium text-gray-700 whitespace-nowrap">날짜</span>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => {
+                    const newOrder = e.target.value as "desc" | "asc"
+                    setSortOrder(newOrder)
+                    fetchDocuments(currentPage, newOrder)
+                  }}
+                  className="px-5 py-4 text-base border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                >
+                  <option value="desc">내림차순</option>
+                  <option value="asc">올림차순</option>
+                </select>
+              </div>
+            </>
+          )}
 
-          {/* 날짜 정렬 */}
-          <div className="flex items-center gap-3">
-            <span className="text-base font-medium text-gray-700 whitespace-nowrap">날짜</span>
-            <select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as "desc" | "asc")}
-              className="px-5 py-4 text-base border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-            >
-              <option value="desc">내림차순</option>
-              <option value="asc">올림차순</option>
-            </select>
-          </div>
+          {searchMode === "filename" && (
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="검색할 파일명을 입력하세요"
+                value={filenameQuery}
+                onChange={(e) => setFilenameQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                className="w-full px-6 py-4 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              />
+            </div>
+          )}
+
+          {searchMode === "tags" && (
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="예: React, TypeScript, Frontend (쉼표로 구분)"
+                value={tagsQuery}
+                onChange={(e) => setTagsQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                className="w-full px-6 py-4 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              />
+            </div>
+          )}
 
           {/* 검색 버튼 */}
-          <button
-            onClick={handleSearch}
-            className="px-8 py-4 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-colors flex items-center gap-2 whitespace-nowrap"
-          >
-            <Search className="w-4 h-4" />
-            검색
-          </button>
+          {searchMode !== "paginated" && (
+            <button
+              onClick={handleSearch}
+              disabled={isLoading}
+              className="px-8 py-4 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-colors flex items-center gap-2 whitespace-nowrap disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              <Search className="w-4 h-4" />
+              {isLoading ? "검색 중..." : "검색"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -207,8 +327,8 @@ export default function DocumentList() {
         ))}
       </div>
 
-      {/* 페이지네이션 */}
-      {totalPages > 1 && (
+      {/* 페이지네이션 - 전체 목록 모드일 때만 표시 */}
+      {searchMode === "paginated" && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-8">
           <button
             onClick={() => goToPage(currentPage - 1)}
