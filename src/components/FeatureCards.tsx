@@ -1,4 +1,5 @@
 import { Upload, Search, MessageSquare } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 interface FeatureCardsProps {
   onCardClick?: () => void
@@ -6,6 +7,7 @@ interface FeatureCardsProps {
 }
 
 export default function FeatureCards({ onCardClick, onUploadClick }: FeatureCardsProps) {
+  const navigate = useNavigate()
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 w-full">
       <div
@@ -39,7 +41,7 @@ export default function FeatureCards({ onCardClick, onUploadClick }: FeatureCard
       <div
         style={{ padding: '1rem' }}
         className="rounded-2xl bg-white border border-gray-200/60 hover:border-blue-400/40 hover:shadow-lg transition-all cursor-pointer"
-        onClick={onCardClick}
+        onClick={() => navigate('/conversations')}
       >
         <div className="w-12 h-12 rounded-xl bg-blue-400/10 flex items-center justify-center mb-4">
           <MessageSquare className="w-6 h-6 text-blue-400" />

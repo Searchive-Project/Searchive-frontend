@@ -83,7 +83,7 @@ export const aichatAPI = {
     data: ConversationCreateRequest
   ): Promise<ConversationCreateResponse> => {
     const response = await apiClient.post<ConversationCreateResponse>(
-      '/api/v1/conversations',
+      '/api/v1/aichat/conversations',
       data
     );
     return response.data;
@@ -99,7 +99,7 @@ export const aichatAPI = {
     pageSize: number = 20
   ): Promise<PaginatedConversationListResponse> => {
     const response = await apiClient.get<PaginatedConversationListResponse>(
-      '/api/v1/conversations',
+      '/api/v1/aichat/conversations',
       {
         params: {
           page,
@@ -118,7 +118,7 @@ export const aichatAPI = {
     conversationId: number
   ): Promise<ConversationDetailSchema> => {
     const response = await apiClient.get<ConversationDetailSchema>(
-      `/api/v1/conversations/${conversationId}`
+      `/api/v1/aichat/conversations/${conversationId}`
     );
     return response.data;
   },
@@ -131,7 +131,7 @@ export const aichatAPI = {
     conversationId: number
   ): Promise<ConversationDeleteResponse> => {
     const response = await apiClient.delete<ConversationDeleteResponse>(
-      `/api/v1/conversations/${conversationId}`
+      `/api/v1/aichat/conversations/${conversationId}`
     );
     return response.data;
   },
@@ -146,7 +146,7 @@ export const aichatAPI = {
     data: MessageSendRequest
   ): Promise<MessageSendResponse> => {
     const response = await apiClient.post<MessageSendResponse>(
-      `/api/v1/conversations/${conversationId}/messages`,
+      `/api/v1/aichat/conversations/${conversationId}/messages`,
       data
     );
     return response.data;
@@ -158,7 +158,7 @@ export const aichatAPI = {
    */
   getMessages: async (conversationId: number): Promise<MessageSchema[]> => {
     const response = await apiClient.get<MessageSchema[]>(
-      `/api/v1/conversations/${conversationId}/messages`
+      `/api/v1/aichat/conversations/${conversationId}/messages`
     );
     return response.data;
   },
@@ -171,7 +171,7 @@ export const aichatAPI = {
     conversationId: number
   ): Promise<ConversationDocumentsResponse> => {
     const response = await apiClient.get<ConversationDocumentsResponse>(
-      `/api/v1/conversations/${conversationId}/documents`
+      `/api/v1/aichat/conversations/${conversationId}/documents`
     );
     return response.data;
   },
@@ -186,7 +186,7 @@ export const aichatAPI = {
     data: ConversationUpdateRequest
   ): Promise<ConversationListItemSchema> => {
     const response = await apiClient.patch<ConversationListItemSchema>(
-      `/api/v1/conversations/${conversationId}`,
+      `/api/v1/aichat/conversations/${conversationId}`,
       data
     );
     return response.data;
