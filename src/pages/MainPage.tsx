@@ -3,14 +3,15 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuthStore } from "../store/authStore"
-import Header from "../components/layout/Header"
 import Footer from "../components/layout/Footer"
 import HeroSection from "../components/HeroSection"
-import LoginModal from "../components/LoginModal"
 import DocumentUploadModal from "../components/DocumentUploadModal"
 
-export default function MainPage() {
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+interface MainPageProps {
+  onLoginClick: () => void
+}
+
+export default function MainPage({ onLoginClick }: MainPageProps) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const { isLoggedIn } = useAuthStore()
   const navigate = useNavigate()
@@ -21,7 +22,7 @@ export default function MainPage() {
       navigate("/dashboard")
     } else {
       // 비로그인 상태면 로그인 모달 열기
-      setIsLoginModalOpen(true)
+      onLoginClick()
     }
   }
 
@@ -31,7 +32,7 @@ export default function MainPage() {
       navigate("/dashboard")
     } else {
       // 비로그인 상태면 로그인 모달 열기
-      setIsLoginModalOpen(true)
+      onLoginClick()
     }
   }
 
@@ -41,13 +42,12 @@ export default function MainPage() {
       setIsUploadModalOpen(true)
     } else {
       // 비로그인 상태면 로그인 모달 열기
-      setIsLoginModalOpen(true)
+      onLoginClick()
     }
   }
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <Header onLoginClick={() => setIsLoginModalOpen(true)} />
       <main className="flex-grow">
         <HeroSection
           onGetStarted={handleGetStarted}
@@ -57,7 +57,6 @@ export default function MainPage() {
         />
       </main>
       <Footer />
-      <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
       <DocumentUploadModal open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen} />
     </div>
   )

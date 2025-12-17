@@ -19,7 +19,7 @@ export default function Header({ onLoginClick }: HeaderProps) {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200/30 bg-white/60 backdrop-blur-2xl">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-2xl shadow-sm">
       <div className="container mx-auto px-4 sm:px-6 h-16 sm:h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 sm:gap-2.5 cursor-pointer" onClick={() => navigate("/")}>

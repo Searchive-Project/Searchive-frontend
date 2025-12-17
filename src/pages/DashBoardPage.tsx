@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuthStore } from "../store/authStore"
-import Header from "../components/layout/Header"
 import FeatureCards from "../components/FeatureCards"
 import DocumentList from "../components/DocumentList"
 import DocumentUploadModal from "../components/DocumentUploadModal"
@@ -26,7 +25,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
 
       {/* 메인 콘텐츠 */}
       <div className="pt-20 sm:pt-24 py-8 sm:py-12 w-full">
