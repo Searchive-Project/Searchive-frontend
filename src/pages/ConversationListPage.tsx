@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { MessageSquare, Calendar, Plus, ChevronLeft, ChevronRight } from "lucide-react"
+import { MessageSquare, Calendar, Plus, ChevronLeft, ChevronRight, Pencil, Check, X } from "lucide-react"
 import { useAuthStore } from "../store/authStore"
 import { aichatAPI, type ConversationListItemSchema, type PaginatedConversationListResponse } from "../api"
 import CreateConversationModal from "../components/CreateConversationModal"
@@ -17,6 +17,8 @@ export default function ConversationListPage() {
   const [total, setTotal] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [editingConversationId, setEditingConversationId] = useState<number | null>(null)
+  const [editingTitle, setEditingTitle] = useState("")
   const pageSize = 20
 
   useEffect(() => {
@@ -98,6 +100,36 @@ export default function ConversationListPage() {
     }
   }
 
+  const handleEditClick = (e: React.MouseEvent, conversationId: number, currentTitle: string) => {
+    e.stopPropagation()
+    setEditingConversationId(conversationId)
+    setEditingTitle(currentTitle)
+  }
+
+  const handleCancelEdit = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditingConversationId(null)
+    setEditingTitle("")
+  }
+
+  const handleSaveEdit = async (e: React.MouseEvent, conversationId: number) => {
+    e.stopPropagation()
+    if (!editingTitle.trim()) {
+      alert("제목을 입력해주세요.")
+      return
+    }
+
+    try {
+      await aichatAPI.updateConversationTitle(conversationId, { title: editingTitle })
+      setEditingConversationId(null)
+      setEditingTitle("")
+      fetchConversations(currentPage)
+    } catch (error) {
+      console.error("Failed to update conversation title:", error)
+      alert("제목 수정에 실패했습니다.")
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white">
 
@@ -146,7 +178,7 @@ export default function ConversationListPage() {
                 {conversations.map((conversation) => (
                   <div
                     key={conversation.conversation_id}
-                    onClick={() => handleConversationClick(conversation.conversation_id)}
+                    onClick={() => editingConversationId !== conversation.conversation_id && handleConversationClick(conversation.conversation_id)}
                     className="p-4 sm:p-5 rounded-xl bg-white border border-gray-200/60 hover:border-blue-400/40 hover:shadow-md transition-all cursor-pointer group"
                   >
                     <div className="flex items-start gap-4">
@@ -154,7 +186,26 @@ export default function ConversationListPage() {
                         <MessageSquare className="w-5 h-5 text-blue-400 group-hover:text-white transition-colors" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 mb-2">{conversation.title}</h3>
+                        {editingConversationId === conversation.conversation_id ? (
+                          <div className="mb-2" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="text"
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              className="w-full px-3 py-2 border border-blue-400 rounded-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleSaveEdit(e as any, conversation.conversation_id)
+                                } else if (e.key === 'Escape') {
+                                  handleCancelEdit(e as any)
+                                }
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <h3 className="font-semibold text-gray-900 mb-2">{conversation.title}</h3>
+                        )}
                         <div className="flex items-center gap-4 text-sm text-gray-500">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5" />
@@ -165,6 +216,34 @@ export default function ConversationListPage() {
                             수정: {formatDate(conversation.updated_at)}
                           </span>
                         </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {editingConversationId === conversation.conversation_id ? (
+                          <>
+                            <button
+                              onClick={(e) => handleSaveEdit(e, conversation.conversation_id)}
+                              className="p-2 rounded-lg bg-blue-400 hover:bg-blue-500 text-white transition-colors"
+                              title="저장"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
+                              title="취소"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={(e) => handleEditClick(e, conversation.conversation_id, conversation.title)}
+                            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors opacity-0 group-hover:opacity-100"
+                            title="제목 수정"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
