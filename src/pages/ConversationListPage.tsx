@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { MessageSquare, Calendar, Plus, ChevronLeft, ChevronRight, Pencil, Check, X } from "lucide-react"
+import { MessageSquare, Calendar, Plus, ChevronLeft, ChevronRight, Pencil, Check, X, Trash2 } from "lucide-react"
 import { useAuthStore } from "../store/authStore"
 import { aichatAPI, type ConversationListItemSchema, type PaginatedConversationListResponse } from "../api"
 import CreateConversationModal from "../components/CreateConversationModal"
@@ -130,6 +130,23 @@ export default function ConversationListPage() {
     }
   }
 
+  const handleDeleteClick = async (e: React.MouseEvent, conversationId: number, title: string) => {
+    e.stopPropagation()
+
+    if (!confirm(`"${title}" 채팅방을 삭제하시겠습니까?\n삭제된 채팅방은 복구할 수 없습니다.`)) {
+      return
+    }
+
+    try {
+      await aichatAPI.deleteConversation(conversationId)
+      // 삭제 후 목록 새로고침
+      fetchConversations(currentPage)
+    } catch (error) {
+      console.error("Failed to delete conversation:", error)
+      alert("채팅방 삭제에 실패했습니다.")
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white">
 
@@ -236,13 +253,22 @@ export default function ConversationListPage() {
                             </button>
                           </>
                         ) : (
-                          <button
-                            onClick={(e) => handleEditClick(e, conversation.conversation_id, conversation.title)}
-                            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors opacity-0 group-hover:opacity-100"
-                            title="제목 수정"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
+                          <>
+                            <button
+                              onClick={(e) => handleEditClick(e, conversation.conversation_id, conversation.title)}
+                              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors opacity-0 group-hover:opacity-100"
+                              title="제목 수정"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteClick(e, conversation.conversation_id, conversation.title)}
+                              className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 transition-colors opacity-0 group-hover:opacity-100"
+                              title="삭제"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
