@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { MessageSquare, Calendar, Plus, ChevronLeft, ChevronRight, Pencil, Check, X, Trash2 } from "lucide-react"
+import { MessageSquare, Calendar, Plus, ChevronLeft, ChevronRight, Pencil, Check, X, Trash2, FileText } from "lucide-react"
 import { useAuthStore } from "../store/authStore"
-import { aichatAPI, type ConversationListItemSchema, type PaginatedConversationListResponse } from "../api"
+import { aichatAPI, type ConversationListItemSchema, type PaginatedConversationListResponse, type DocumentSchema } from "../api"
 import CreateConversationModal from "../components/CreateConversationModal"
 import { Button } from "../components/common/Button"
 
@@ -12,6 +12,7 @@ export default function ConversationListPage() {
   const { isLoggedIn } = useAuthStore()
   const navigate = useNavigate()
   const [conversations, setConversations] = useState<ConversationListItemSchema[]>([])
+  const [conversationDocuments, setConversationDocuments] = useState<Record<number, DocumentSchema[]>>({})
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
@@ -36,6 +37,21 @@ export default function ConversationListPage() {
       setConversations(response.items)
       setTotalPages(response.total_pages)
       setTotal(response.total)
+
+      // 각 채팅방의 문서 목록 가져오기
+      const documentsMap: Record<number, DocumentSchema[]> = {}
+      await Promise.all(
+        response.items.map(async (conversation) => {
+          try {
+            const docResponse = await aichatAPI.getConversationDocuments(conversation.conversation_id)
+            documentsMap[conversation.conversation_id] = docResponse.documents
+          } catch (error) {
+            console.error(`Failed to fetch documents for conversation ${conversation.conversation_id}:`, error)
+            documentsMap[conversation.conversation_id] = []
+          }
+        })
+      )
+      setConversationDocuments(documentsMap)
     } catch (error) {
       console.error("Failed to fetch conversations:", error)
     } finally {
@@ -171,8 +187,17 @@ export default function ConversationListPage() {
           {/* 채팅방 목록 */}
           <div className="w-full">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">채팅방 목록</h2>
-              <span className="text-sm text-gray-500">전체 {total}개</span>
+              <div className="flex items-center gap-4">
+                <h2 className="text-xl font-semibold text-gray-900">채팅방 목록</h2>
+                <span className="text-sm text-gray-500">전체 {total}개</span>
+              </div>
+              <Button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-blue-400 hover:bg-blue-500 text-white flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                새 채팅방
+              </Button>
             </div>
 
             {isLoading && conversations.length === 0 ? (
@@ -222,6 +247,19 @@ export default function ConversationListPage() {
                           </div>
                         ) : (
                           <h3 className="font-semibold text-gray-900 mb-2">{conversation.title}</h3>
+                        )}
+                        {conversationDocuments[conversation.conversation_id]?.length > 0 && (
+                          <div className="flex items-start gap-1 text-sm text-blue-600 mb-2">
+                            <FileText className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                            <span className="break-all">
+                              {conversationDocuments[conversation.conversation_id].map((doc, index) => (
+                                <span key={doc.document_id}>
+                                  {doc.original_filename}
+                                  {index < conversationDocuments[conversation.conversation_id].length - 1 && ", "}
+                                </span>
+                              ))}
+                            </span>
+                          </div>
                         )}
                         <div className="flex items-center gap-4 text-sm text-gray-500">
                           <span className="flex items-center gap-1">
