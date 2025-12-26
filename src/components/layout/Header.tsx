@@ -62,7 +62,12 @@ export default function Header({ onLoginClick }: HeaderProps) {
             </>
           ) : (
             <>
-              <span className="text-sm text-gray-500">{user?.nickname}</span>
+              <span
+                className="text-sm text-gray-500 hover:text-gray-900 cursor-pointer transition-colors"
+                onClick={() => navigate("/profile")}
+              >
+                {user?.nickname}
+              </span>
               <Button
                 variant="ghost"
                 onClick={handleLogout}
