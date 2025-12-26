@@ -8,6 +8,7 @@ import DashboardPage from "./pages/DashBoardPage"
 import KakaoCallback from "./pages/KakaoCallback"
 import ConversationListPage from "./pages/ConversationListPage"
 import ConversationDetailPage from "./pages/ConversationDetailPage"
+import UserProfilePage from "./pages/UserProfilePage"
 import "./styles/global.css"
 
 function AppContent() {
@@ -26,6 +27,7 @@ function AppContent() {
         <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
         <Route path="/conversations" element={<ConversationListPage />} />
         <Route path="/conversations/:conversationId" element={<ConversationDetailPage />} />
+        <Route path="/profile" element={<UserProfilePage />} />
       </Routes>
       <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
     </>

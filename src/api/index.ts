@@ -5,3 +5,4 @@ export { default as apiClient } from './client';
 export * from './auth';
 export * from './document';
 export * from './aichat';
+export * from './users';
