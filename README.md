@@ -14,7 +14,13 @@
 -   **AI 기반 기능**:
     -   원클릭 문서 요약.
     -   여러 문서를 선택하여 대화할 수 있는 AI 채팅 인터페이스.
+    -   AI 채팅방 생성, 수정, 삭제 및 대화 관리.
+    -   실시간 AI 응답 스트리밍.
 -   **개인화 대시보드**: 사용자 프로필에서 자신의 지식 활용 패턴을 시각적으로 확인.
+-   **사용자 프로필 페이지**:
+    -   사용자 관심사 및 토픽 선호도 차트.
+    -   활동 히트맵으로 사용 패턴 시각화.
+    -   개인 정보 및 통계 확인.
 
 ---
 
@@ -85,19 +91,29 @@ Searchive-frontend/
 │   │   ├── layout/      # 헤더, 푸터 등 레이아웃 컴포넌트
 │   │   │   ├── Header.tsx
 │   │   │   └── Footer.tsx
-│   │   ├── DocumentList.tsx    # 문서 목록 컴포넌트
-│   │   ├── FeatureCards.tsx    # 기능 소개 카드
-│   │   ├── HeroSection.tsx     # 메인 히어로 섹션
-│   │   └── LoginModal.tsx      # 로그인 모달
+│   │   ├── profile/     # 사용자 프로필 관련 컴포넌트
+│   │   │   ├── UserInfoCard.tsx         # 사용자 정보 카드
+│   │   │   ├── TopicPreferenceChart.tsx # 토픽 선호도 차트
+│   │   │   └── ActivityHeatmap.tsx      # 활동 히트맵
+│   │   ├── DocumentList.tsx             # 문서 목록 컴포넌트
+│   │   ├── DocumentSelector.tsx         # AI 채팅용 문서 선택기
+│   │   ├── DocumentUploadModal.tsx      # 문서 업로드 모달
+│   │   ├── CreateConversationModal.tsx  # AI 채팅방 생성 모달
+│   │   ├── FeatureCards.tsx             # 기능 소개 카드
+│   │   ├── HeroSection.tsx              # 메인 히어로 섹션
+│   │   └── LoginModal.tsx               # 로그인 모달
 │   ├── hooks/           # 🎣 커스텀 훅
 │   │   ├── useAuth.ts          # 인증 상태 관리
 │   │   └── useDocuments.ts     # 문서 데이터 관리
 │   ├── lib/             # 🔧 유틸리티 함수
 │   │   └── utils.ts            # 공통 유틸 함수 (cn 등)
 │   ├── pages/           # 📄 페이지 단위의 컴포넌트
-│   │   ├── DashBoardPage.tsx   # 대시보드 페이지
-│   │   ├── KakaoCallback.tsx   # 카카오 로그인 콜백
-│   │   └── MainPage.tsx        # 메인 페이지
+│   │   ├── MainPage.tsx                # 메인 랜딩 페이지
+│   │   ├── DashBoardPage.tsx           # 대시보드 페이지 (문서 관리)
+│   │   ├── UserProfilePage.tsx         # 사용자 프로필 페이지
+│   │   ├── ConversationListPage.tsx    # AI 채팅방 목록 페이지
+│   │   ├── ConversationDetailPage.tsx  # AI 채팅방 상세 페이지
+│   │   └── KakaoCallback.tsx           # 카카오 로그인 콜백
 │   ├── store/           # 🏪 전역 상태 관리 (Zustand)
 │   │   └── authStore.ts        # 인증 상태 스토어
 │   ├── styles/          # 🎨 전역 CSS, 테마 관련 파일
@@ -134,6 +150,7 @@ Searchive-frontend/
 - **하위 폴더**:
   - **`common/`**: `Button`, `Input`, `Modal`처럼 프로젝트 전반에서 사용되는 범용 컴포넌트가 위치합니다.
   - **`layout/`**: `Header`, `Footer`, `Sidebar`처럼 페이지의 전체적인 레이아웃을 구성하는 컴포넌트가 위치합니다.
+  - **`profile/`**: 사용자 프로필 페이지에서 사용되는 컴포넌트들입니다. 사용자 정보 카드, 토픽 선호도 차트, 활동 히트맵 등이 포함됩니다.
 
 #### `hooks/` 🎣
 - **역할**: 여러 컴포넌트에서 공통으로 사용될 로직을 분리하는 커스텀 훅을 만듭니다.
@@ -150,7 +167,10 @@ Searchive-frontend/
 - **역할**: 실제 사용자가 보게 될 페이지 단위의 큰 컴포넌트들을 만듭니다.
 - **내용**:
   - `MainPage.tsx`: 메인 랜딩 페이지
-  - `DashBoardPage.tsx`: 사용자 대시보드 페이지
+  - `DashBoardPage.tsx`: 문서 관리 대시보드 페이지 (업로드, 검색, 목록 조회)
+  - `UserProfilePage.tsx`: 사용자 프로필 및 활동 통계 페이지
+  - `ConversationListPage.tsx`: AI 채팅방 목록 조회 및 관리 페이지
+  - `ConversationDetailPage.tsx`: AI 채팅방 상세 및 대화 페이지
   - `KakaoCallback.tsx`: 카카오 로그인 OAuth 콜백 처리 페이지
 
 #### `store/` 🏪
