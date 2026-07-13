@@ -4,6 +4,7 @@ import { authAPI } from "../api"
 
 interface AuthState {
   isLoggedIn: boolean
+  isAuthReady: boolean
   user: {
     userId: number
     kakaoId: string
@@ -20,6 +21,7 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       isLoggedIn: false,
+      isAuthReady: false,
       user: null,
       login: async (email: string, _password: string) => {
         // TODO: 백엔드 API 호출
@@ -27,6 +29,7 @@ export const useAuthStore = create<AuthState>()(
         await new Promise((resolve) => setTimeout(resolve, 1000))
         set({
           isLoggedIn: true,
+          isAuthReady: true,
           user: {
             userId: 0,
             kakaoId: "",
@@ -41,17 +44,18 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error("로그아웃 실패:", error)
         } finally {
-          set({ isLoggedIn: false, user: null })
+          set({ isLoggedIn: false, isAuthReady: true, user: null })
         }
       },
       setUser: (user) => {
-        set({ user, isLoggedIn: true })
+        set({ user, isLoggedIn: true, isAuthReady: true })
       },
       checkAuth: async () => {
         try {
           const userData = await authAPI.getCurrentUser()
           set({
             isLoggedIn: true,
+            isAuthReady: true,
             user: {
               userId: userData.user_id,
               kakaoId: userData.kakao_id,
@@ -61,12 +65,13 @@ export const useAuthStore = create<AuthState>()(
           })
         } catch (error) {
           console.error("인증 확인 실패:", error)
-          set({ isLoggedIn: false, user: null })
+          set({ isLoggedIn: false, isAuthReady: true, user: null })
         }
       },
     }),
     {
       name: "auth-storage",
+      partialize: (state) => ({ isLoggedIn: state.isLoggedIn, user: state.user }),
     },
   ),
 )

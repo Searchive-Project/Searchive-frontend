@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom"
+import { useEffect, useState, type ReactNode } from "react"
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom"
 import { useAuthStore } from "./store/authStore"
 import Header from "./components/layout/Header"
 import LoginModal from "./components/LoginModal"
@@ -10,6 +10,13 @@ import ConversationListPage from "./pages/ConversationListPage"
 import ConversationDetailPage from "./pages/ConversationDetailPage"
 import UserProfilePage from "./pages/UserProfilePage"
 import "./styles/global.css"
+
+function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { isAuthReady, isLoggedIn } = useAuthStore()
+
+  if (!isAuthReady) return null
+  return isLoggedIn ? children : <Navigate to="/" replace />
+}
 
 function AppContent() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
@@ -23,11 +30,11 @@ function AppContent() {
       {showHeader && <Header onLoginClick={() => setIsLoginModalOpen(true)} />}
       <Routes>
         <Route path="/" element={<MainPage onLoginClick={() => setIsLoginModalOpen(true)} />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
-        <Route path="/conversations" element={<ConversationListPage />} />
-        <Route path="/conversations/:conversationId" element={<ConversationDetailPage />} />
-        <Route path="/profile" element={<UserProfilePage />} />
+        <Route path="/conversations" element={<ProtectedRoute><ConversationListPage /></ProtectedRoute>} />
+        <Route path="/conversations/:conversationId" element={<ProtectedRoute><ConversationDetailPage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
       </Routes>
       <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
     </>
