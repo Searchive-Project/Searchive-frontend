@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { usersAPI, ActivityDataPoint } from "../../api"
+import { usersAPI, type ActivityDataPoint } from "../../api"
 import { Calendar } from "lucide-react"
 
 export default function ActivityHeatmap() {
