@@ -12,47 +12,25 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
 
-  // 로그인하지 않은 경우 메인 페이지로 리다이렉트
   useEffect(() => {
-    if (!isLoggedIn) {
-      navigate("/")
-    }
+    if (!isLoggedIn) navigate("/")
   }, [isLoggedIn, navigate])
 
-  const handleUploadClick = () => {
-    setIsUploadModalOpen(true)
-  }
-
   return (
-    <div className="min-h-screen bg-white">
+    <main className="min-h-[100dvh] bg-slate-50 px-4 pb-16 pt-24 sm:px-6 sm:pt-28">
+      <div className="mx-auto max-w-6xl">
+        <header className="mb-8">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">문서 워크스페이스</h1>
+          <p className="mt-2 text-slate-600">문서를 업로드하고, 정리된 정보를 검색하거나 AI 채팅에 연결하세요.</p>
+        </header>
 
-      {/* 메인 콘텐츠 */}
-      <div className="pt-20 sm:pt-24 py-8 sm:py-12 w-full">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="mb-10 sm:mb-12 text-center">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">대시보드</h1>
-            <p className="text-sm sm:text-base text-gray-500">문서를 업로드하고 AI와 대화를 시작하세요</p>
-          </div>
-        </div>
+        <FeatureCards onUploadClick={() => setIsUploadModalOpen(true)} />
 
-        {/* Feature Cards - 가운데 상단 배치 */}
-        <div className="w-full py-8 mb-12 px-4 sm:px-6 lg:px-8">
-          <FeatureCards onUploadClick={handleUploadClick} />
-        </div>
-
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          {/* 구분선 */}
-          <div className="w-full border-t border-gray-200 my-12"></div>
-
-          {/* 업로드된 문서 목록 영역 */}
-          <div className="w-full py-8 mt-12">
-            <DocumentList />
-          </div>
-        </div>
+        <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+          <DocumentList />
+        </section>
       </div>
-
-      {/* 문서 업로드 모달 */}
       <DocumentUploadModal open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen} />
-    </div>
+    </main>
   )
 }
