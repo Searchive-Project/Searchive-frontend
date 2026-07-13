@@ -3,21 +3,21 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-lg font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/40 disabled:pointer-events-none disabled:opacity-50 active:translate-y-px",
   {
     variants: {
       variant: {
-        default: "bg-blue-400 text-white shadow hover:bg-blue-500",
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
-        outline: "border border-gray-100 bg-white shadow-sm hover:bg-blue-300 hover:text-white",
-        secondary: "bg-gray-100 text-gray-900 shadow-sm hover:bg-gray-100/80",
-        ghost: "hover:bg-gray-100 hover:text-gray-900",
-        link: "text-blue-400 underline-offset-4 hover:underline",
+        default: "bg-blue-600 text-white shadow-sm shadow-blue-900/10 hover:bg-blue-700",
+        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-red-700",
+        outline: "border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50",
+        secondary: "bg-blue-50 text-blue-800 hover:bg-blue-100",
+        ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
+        link: "text-blue-700 underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-11 px-16 py-3 text-sm",
-        sm: "h-10 rounded-md px-10 py-2.5 text-xs",
-        lg: "h-12 rounded-md px-20 py-4 text-base",
+        default: "h-10 px-4 text-sm",
+        sm: "h-9 rounded-md px-3 text-sm",
+        lg: "h-12 px-5 text-base",
         icon: "h-10 w-10",
       },
     },
