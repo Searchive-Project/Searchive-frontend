@@ -169,19 +169,8 @@ export default function ConversationListPage() {
       <div className="pt-20 sm:pt-24 py-8 sm:py-12 w-full">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="mb-10 sm:mb-12">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">AI 채팅방</h1>
-                <p className="text-sm sm:text-base text-gray-500">문서와 대화하고 질문하세요</p>
-              </div>
-              <Button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="bg-blue-400 hover:bg-blue-500 text-white flex items-center gap-2"
-              >
-                <Plus className="w-5 h-5" />
-                새 채팅방
-              </Button>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">AI 채팅방</h1>
+            <p className="text-sm sm:text-base text-gray-500">문서와 대화하고 질문하세요</p>
           </div>
 
           {/* 채팅방 목록 */}

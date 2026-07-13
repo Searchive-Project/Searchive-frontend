@@ -34,7 +34,7 @@ export default function CreateConversationModal({ open, onOpenChange }: CreateCo
 
     setIsCreating(true)
     try {
-      const response = await aichatAPI.createConversation({
+      await aichatAPI.createConversation({
         title: title.trim(),
         document_ids: selectedDocuments,
       })

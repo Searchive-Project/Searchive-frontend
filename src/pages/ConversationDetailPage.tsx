@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Send, FileText, Loader2 } from "lucide-react"
+import { ArrowLeft, FileText, Loader2, Send } from "lucide-react"
 import { useAuthStore } from "../store/authStore"
-import { aichatAPI, type MessageSchema, type DocumentSchema } from "../api"
+import { aichatAPI, type DocumentSchema, type MessageSchema } from "../api"
 import { Button } from "../components/common/Button"
 
 export default function ConversationDetailPage() {
@@ -30,16 +30,11 @@ export default function ConversationDetailPage() {
   }, [isLoggedIn, navigate, conversationId])
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+  }, [messages])
 
   const fetchConversationDetail = async () => {
     if (!conversationId) return
-
     try {
       const detail = await aichatAPI.getConversationDetail(Number(conversationId))
       setConversationTitle(detail.title)
@@ -50,11 +45,9 @@ export default function ConversationDetailPage() {
 
   const fetchMessages = async () => {
     if (!conversationId) return
-
     setIsLoading(true)
     try {
-      const messageList = await aichatAPI.getMessages(Number(conversationId))
-      setMessages(messageList)
+      setMessages(await aichatAPI.getMessages(Number(conversationId)))
     } catch (error) {
       console.error("Failed to fetch messages:", error)
     } finally {
@@ -64,7 +57,6 @@ export default function ConversationDetailPage() {
 
   const fetchDocuments = async () => {
     if (!conversationId) return
-
     try {
       const response = await aichatAPI.getConversationDocuments(Number(conversationId))
       setDocuments(response.documents)
@@ -73,152 +65,112 @@ export default function ConversationDetailPage() {
     }
   }
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSendMessage = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!newMessage.trim() || !conversationId || isSending) return
 
-    if (!newMessage.trim() || !conversationId || isSending) {
-      return
+    const content = newMessage.trim()
+    const temporaryMessage: MessageSchema = {
+      message_id: -Date.now(),
+      role: "user",
+      content,
+      created_at: new Date().toISOString(),
     }
-
-    const userMessageContent = newMessage.trim()
     setNewMessage("")
+    setMessages((current) => [...current, temporaryMessage])
     setIsSending(true)
 
-    // 사용자 메시지를 즉시 UI에 추가 (임시 표시)
-    const tempUserMessage: MessageSchema = {
-      message_id: -Date.now(), // 음수로 임시 ID 구분
-      role: 'user',
-      content: userMessageContent,
-      created_at: new Date().toISOString()
-    }
-    setMessages(prev => [...prev, tempUserMessage])
-
     try {
-      // 메시지 전송
-      await aichatAPI.sendMessage(Number(conversationId), {
-        content: userMessageContent
-      })
-
-      // 전송 성공 후 데이터베이스에서 전체 메시지 다시 조회
-      const updatedMessages = await aichatAPI.getMessages(Number(conversationId))
-      setMessages(updatedMessages)
+      await aichatAPI.sendMessage(Number(conversationId), { content })
+      setMessages(await aichatAPI.getMessages(Number(conversationId)))
     } catch (error) {
       console.error("Failed to send message:", error)
-      alert("메시지 전송에 실패했습니다.")
-      // 에러 발생 시 임시 메시지 제거하고 입력창에 복원
-      setMessages(prev => prev.filter(msg => msg.message_id !== tempUserMessage.message_id))
-      setNewMessage(userMessageContent)
+      alert("메시지 전송에 실패했습니다. 다시 시도해주세요.")
+      setMessages((current) => current.filter((message) => message.message_id !== temporaryMessage.message_id))
+      setNewMessage(content)
     } finally {
       setIsSending(false)
     }
   }
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    return `${hours}:${minutes}`
-  }
+  const formatTime = (dateString: string) => new Intl.DateTimeFormat("ko-KR", { hour: "2-digit", minute: "2-digit" }).format(new Date(dateString))
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col h-screen">
-      {/* 상단 여백 (메인 Header 공간) */}
-      <div className="h-16 flex-shrink-0"></div>
-
-      {/* 헤더 */}
-      <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
-        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
-          <button
-            onClick={() => navigate("/conversations")}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
+    <main className="flex min-h-[100dvh] flex-col bg-slate-50 pt-16">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-6xl items-start gap-3 px-4 py-4 sm:px-6">
+          <button type="button" onClick={() => navigate("/conversations")} aria-label="채팅방 목록으로 돌아가기" className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
+            <ArrowLeft className="size-5" aria-hidden="true" />
           </button>
-          <div className="flex-1">
-            <h1 className="text-lg font-semibold text-gray-900">{conversationTitle}</h1>
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-bold text-slate-950">{conversationTitle || "AI 채팅"}</h1>
             {documents.length > 0 && (
-              <div className="flex items-start gap-1 text-sm text-blue-600 mt-1">
-                <FileText className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                <span className="break-all">
-                  {documents.map((doc, index) => (
-                    <span key={doc.document_id}>
-                      {doc.original_filename}
-                      {index < documents.length - 1 && ", "}
-                    </span>
-                  ))}
-                </span>
-              </div>
+              <p className="mt-1 flex items-start gap-1.5 text-sm text-slate-600">
+                <FileText className="mt-0.5 size-4 shrink-0 text-blue-700" aria-hidden="true" />
+                <span className="line-clamp-2">{documents.map((document) => document.original_filename).join(", ")}</span>
+              </p>
             )}
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* 메시지 목록 */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <section className="flex-1 overflow-y-auto px-4 py-7 sm:px-6">
+        <div className="mx-auto max-w-3xl">
           {isLoading ? (
-            <div className="text-center py-8 text-gray-400">
-              <p>로딩 중...</p>
+            <div className="space-y-4" aria-label="메시지를 불러오는 중">
+              <div className="h-20 w-3/4 animate-pulse rounded-2xl bg-slate-200" />
+              <div className="ml-auto h-12 w-1/2 animate-pulse rounded-2xl bg-slate-200" />
             </div>
           ) : messages.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              <p>메시지가 없습니다. 첫 메시지를 보내보세요!</p>
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+              <FileText className="mx-auto size-8 text-blue-700" aria-hidden="true" />
+              <h2 className="mt-4 font-semibold text-slate-950">선택한 문서에 대해 질문해 보세요.</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">핵심 내용, 개념 설명, 문서 간 차이를 물어볼 수 있습니다.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.message_id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`flex flex-col max-w-[70%] ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-                    <div
-                      className={`px-6 py-4 rounded-2xl ${
-                        message.role === 'user'
-                          ? 'bg-blue-400 text-white'
-                          : 'bg-white border border-gray-200 text-gray-900 shadow-md'
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap break-words">{message.content}</p>
+            <div className="space-y-6">
+              {messages.map((message) => {
+                const isUser = message.role === "user"
+                return (
+                  <article key={message.message_id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[88%] sm:max-w-[76%] ${isUser ? "items-end" : "items-start"}`}>
+                      <div className={`rounded-2xl px-4 py-3 text-[15px] leading-7 shadow-sm ${isUser ? "rounded-br-md bg-blue-600 text-white" : "rounded-bl-md border border-slate-200 bg-white text-slate-800"}`}>
+                        <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                      </div>
+                      <time className="mt-1.5 block px-1 text-xs text-slate-400">{formatTime(message.created_at)}</time>
                     </div>
-                    <span className="text-xs text-gray-400 mt-1 px-2">
-                      {formatTime(message.created_at)}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                  </article>
+                )
+              })}
               <div ref={messagesEndRef} />
             </div>
           )}
         </div>
-      </div>
+      </section>
 
-      {/* 메시지 입력창 */}
-      <div className="bg-white border-t border-gray-200 flex-shrink-0">
-        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="메시지를 입력하세요..."
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-              disabled={isSending}
-            />
-            <Button
-              type="submit"
-              disabled={!newMessage.trim() || isSending}
-              className="bg-blue-400 hover:bg-blue-500 text-white rounded-full w-12 h-12 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-            </Button>
-          </form>
-        </div>
+      <div className="border-t border-slate-200 bg-white px-4 py-4 sm:px-6">
+        <form onSubmit={handleSendMessage} className="mx-auto flex max-w-3xl items-end gap-3">
+          <label className="sr-only" htmlFor="message">메시지</label>
+          <textarea
+            id="message"
+            rows={1}
+            value={newMessage}
+            onChange={(event) => setNewMessage(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault()
+                event.currentTarget.form?.requestSubmit()
+              }
+            }}
+            placeholder="문서에 대해 질문하세요. Enter로 전송, Shift + Enter로 줄바꿈"
+            className="max-h-32 min-h-12 flex-1 resize-y rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none"
+            disabled={isSending}
+          />
+          <Button type="submit" size="icon" aria-label="메시지 전송" disabled={!newMessage.trim() || isSending}>
+            {isSending ? <Loader2 className="size-5 animate-spin" aria-hidden="true" /> : <Send className="size-5" aria-hidden="true" />}
+          </Button>
+        </form>
       </div>
-    </div>
+    </main>
   )
 }
